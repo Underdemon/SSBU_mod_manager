@@ -5,11 +5,11 @@
  */
 package mod_parsing;
 import java.io.IOException;
-import java.nio.file.Files;
+import java.nio.file.*;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Scanner;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.regex.*;
+import static java.nio.file.FileVisitResult.*;
 /**
  *
  * @author Admin
@@ -57,40 +57,59 @@ public class Mod_parsing
                 }
         );
         */
+        Path dir = Paths.get("R:\\switch sutff\\smash ult modding\\mods");
+        PrintFiles pf = new PrintFiles();
+        Files.walkFileTree(dir, pf);
+    }
+
+    public static class PrintFiles extends SimpleFileVisitor<Path>
+    {
         final Pattern type = Pattern.compile("(fighter)|(ui)|(stream;)|(stage)|(effect)|(boss)|(param)|(sound)");    //defines regex pattern to test (& compiles it?)
+        final Pattern fight = Pattern.compile("fighter");
         final Pattern slot = Pattern.compile("c0[0-7]");
         final Pattern ui = Pattern.compile("chara_[0-7]");
-        
-        System.out.println("Please input the path you want to scan for mods: ");
-        String inp = new Scanner(System.in).nextLine();
-        Path dir = Paths.get(inp); 
-        Files.walk(dir).forEach
-        (
-                file ->
-                {
-                    Matcher slotNum = slot.matcher(file.getFileName().toString());   //matches string to pattern defined above
-                    while(slotNum.find()) //check all occurences
-                    {
-                        if(!slotNum.group().equals(null))
-                        {
-                            Matcher modTypeFighter = type.matcher(file.getParent().getParent().getParent().getParent().getFileName().toString());
-                            while(modTypeFighter.find())
-                            {
-                                //if(!modTypeFighter.group().equals(null))
-                                if(modTypeFighter.group().equals("fighter"))
-                                {
-                                    System.out.println("\t" + file.normalize().toString() + "    --->    " + slotNum.group());
-                                }
-                            }
-                        }
-                    }
-                }
-        );
+        // Print information about
+        // each type of file.
+        @Override
+        public FileVisitResult visitFile(Path file, BasicFileAttributes attr)
+        {
+            Matcher fighter = fight.matcher(file.getFileName().toString());
+            if(fighter.find())
+                System.out.println("\t" + file.normalize().toString());
+
+            return CONTINUE;
+        }
+
+        // Print each directory visited.
+        @Override
+        public FileVisitResult postVisitDirectory(Path dir, IOException exc)
+        {
+            //System.out.format("Directory: %s%n", dir);
+            return CONTINUE;
+        }
+
+        // If there is some error accessing
+        // the file, let the user know.
+        // If you don't override this method
+        // and an error occurs, an IOException
+        // is thrown.
+        @Override
+        public FileVisitResult visitFileFailed(Path file, IOException exc)
+        {
+            System.err.println(exc);
+            return CONTINUE;
+        }
     }
 }
 
+
+
 // LEARNING:
+//===========
 /*
+https://docs.oracle.com/javase/tutorial/essential/io/walk.html
+
+
 nio api
     file.walk
         multiwalking?!? <https://stackoverflow.com/questions/60714501/how-to-walk-multiple-directories-with-multiple-file-extensions-in-java>
@@ -119,104 +138,6 @@ nio api
 */
 
 /*
-FIGHTER NAMES
-bayonetta
-brave
-buddy
-captain
-chrom
-cloud
-common
-daisy
-dedede
-demon
-diddy
-dolly
-donkey
-duckhunt
-edge
-eflame
-element
-elight
-falco
-fox
-gamewatch
-ganon
-gaogaen
-gekkouga
-ike
-inkling
-jack
-kamui
-ken
-kirby
-koopa
-koopag
-koopajr
-krool
-link
-littlemac
-lucario
-lucas
-lucina
-luigi
-mario
-mariod
-marth
-master
-metaknight
-mewtwo
-miienemyf
-miienemyg
-miienemys
-miifighter
-miigunner
-miiswordsman
-murabito
-nana
-ness
-packun
-pacman
-palutena
-peach
-pfushigisou
-pichu
-pickel
-pikachu
-pikmin
-pit
-pitb
-plizardon
-popo
-ptrainer
-purin
-pzenigame
-reflet
-richter
-ridley
-robot
-rockman
-rosetta
-roy
-ryu
-samus
-samusd
-sheik
-shizue
-shulk
-simon
-snake
-sonic
-szerosuit
-tantan
-toonlink
-trail
-wario
-wiifit
-wolf
-yoshi
-younglink
-zelda
 
 1.Mario- {mario}
 
