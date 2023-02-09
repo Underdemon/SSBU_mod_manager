@@ -7,9 +7,13 @@ package mod_parsing;
 import java.io.IOException;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.HashMap;
+import java.util.Objects;
 import java.util.Scanner;
 import java.util.regex.*;
 import static java.nio.file.FileVisitResult.*;
+import java.util.HashSet;
+
 /**
  *
  * @author Admin
@@ -60,6 +64,13 @@ public class Mod_parsing
         Path dir = Paths.get("R:\\switch sutff\\smash ult modding\\mods");
         PrintFiles pf = new PrintFiles();
         Files.walkFileTree(dir, pf);
+
+        System.out.println("\n\n\n\n\n\n\n");
+
+        for(String s : pf.modsNChars)
+        {
+            System.out.println(s);
+        }
     }
 
     public static class PrintFiles extends SimpleFileVisitor<Path>
@@ -68,16 +79,70 @@ public class Mod_parsing
         final Pattern fight = Pattern.compile("fighter");
         final Pattern slot = Pattern.compile("c0[0-7]");
         final Pattern ui = Pattern.compile("chara_[0-7]");
+        HashMap<String, String> char_names = new HashMap<>();
+        boolean isModFound = false;
+        HashSet<String> modsNChars = new HashSet<>();
         // Print information about
         // each type of file.
-        @Override
-        public FileVisitResult visitFile(Path file, BasicFileAttributes attr)
-        {
-            Matcher fighter = fight.matcher(file.getFileName().toString());
-            if(fighter.find())
-                System.out.println("\t" + file.normalize().toString());
 
+        @Override
+        public FileVisitResult visitFile(Path file, BasicFileAttributes attr) throws NullPointerException
+        {
+            try
+            {
+                if (file.normalize().toString().matches(".*(\\\\c0[0-7]\\\\).*"))
+                {
+                    Path charFolder = Paths.get(file.toString());
+                    while (!char_names.containsKey(charFolder.getFileName().toString()))
+                    {
+                        if (charFolder.equals(file.getRoot()))
+                        {
+                            charFolder = null;
+                            break;
+                        }
+
+                        charFolder = charFolder.getParent();
+                    }
+
+                    if (charFolder == null)
+                        return CONTINUE;
+                    else if (charFolder.getParent().getParent().getFileName().toString().equals("camera") || charFolder.getParent().getParent().getFileName().toString().equals("effect"))
+                    {
+                        System.out.println
+                        (
+                                char_names.get(charFolder.getFileName().toString())
+                                + "\n\tMod Name: " + charFolder.getParent().getParent().getParent().getFileName().toString()
+                        );
+                        modsNChars.add(charFolder.getParent().getParent().getParent().getFileName().toString());
+                    }
+                    else
+                    {
+                        System.out.println
+                        (
+                            char_names.get(charFolder.getFileName().toString())
+                            + "\n\tMod Name: " + charFolder.getParent().getParent().getFileName().toString()
+                        );
+                        modsNChars.add(charFolder.getParent().getParent().getFileName().toString());
+                    }
+
+                    //isModFound = true;
+                    return SKIP_SIBLINGS;
+                }
+            }
+            catch(Exception e) {}
             return CONTINUE;
+        }
+
+        @Override
+        public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException
+        {
+//            if(isModFound)
+//            {
+//                isModFound = false;
+//                return SKIP_SIBLINGS;
+//            }
+//            else
+                return CONTINUE;
         }
 
         // Print each directory visited.
@@ -98,6 +163,108 @@ public class Mod_parsing
         {
             System.err.println(exc);
             return CONTINUE;
+        }
+
+        public HashSet<String> getModsNChars()
+        {
+            return modsNChars;
+        }
+
+        public PrintFiles()
+        {
+            char_names.put("mario", "Mario");
+            char_names.put("donkey", "Donkey Kong");
+            char_names.put("link", "Link");
+            char_names.put("samus", "Samus");
+            char_names.put("samusd", "Dark Samus");
+            char_names.put("yoshi", "Yoshi");
+            char_names.put("kirby", "Kirby");
+            char_names.put("fox", "Fox");
+            char_names.put("pikachu", "Pikachu");
+            char_names.put("luigi", "Luigi");
+            char_names.put("ness", "Ness");
+            char_names.put("captain", "Captain Falcon");
+            char_names.put("purin", "Jigglypuff");
+            char_names.put("peach", "Peach");
+            char_names.put("daisy", "Daisy");
+            char_names.put("koopa", "Bowser");
+            char_names.put("koopag", "Giga Bowser");
+            char_names.put("nana", "Nana");
+            char_names.put("popo", "Popo");
+            char_names.put("sheik", "Sheik");
+            char_names.put("zelda", "Zelda");
+            char_names.put("mariod", "Doctor Mario");
+            char_names.put("pichu", "Pichu");
+            char_names.put("falco", "Falco");
+            char_names.put("marth", "Marth");
+            char_names.put("lucina", "Lucina");
+            char_names.put("younglink", "Young Link");
+            char_names.put("ganon", "Ganondorf");
+            char_names.put("mewtwo", "Mewtwo");
+            char_names.put("roy", "Roy");
+            char_names.put("chrom", "Chrom");
+            char_names.put("gamewatch", "Mr. Game & Watch");
+            char_names.put("metaknight", "Meta Knight");
+            char_names.put("pit", "Pit");
+            char_names.put("pitb", "Dark Pit");
+            char_names.put("szerosuit", "Zero Suit Samus");
+            char_names.put("wario", "Wario");
+            char_names.put("snake", "Snake");
+            char_names.put("ike", "Ike");
+            char_names.put("ptrainer", "Pokémon Trainer");
+            char_names.put("pzenigame", "Squirtle");
+            char_names.put("pfushigisou", "Ivysaur");
+            char_names.put("plizardon", "Charizard");
+            char_names.put("diddy", "Diddy Kong");
+            char_names.put("lucas", "Lucas");
+            char_names.put("sonic", "Sonic");
+            char_names.put("dedede", "King Dedede");
+            char_names.put("pikmin", "Olimar");
+            char_names.put("lucario", "Lucario");
+            char_names.put("robot", "R.O.B.");
+            char_names.put("toonlink", "Toon Link");
+            char_names.put("wolf", "Wolf");
+            char_names.put("murabito", "Villager");
+            char_names.put("rockman", "Mega Man");
+            char_names.put("wiifit", "Wii Fit Trainer");
+            char_names.put("rosetta", "Rosalina & Luma");
+            char_names.put("littlemac", "Little Mac");
+            char_names.put("gekkouga", "Greninja");
+            char_names.put("miifighter", "Mii Brawler");
+            char_names.put("miiswordsman", "Mii Swordfighter");
+            char_names.put("miigunner", "Mii Gunner");
+            char_names.put("palutena", "Palutena");
+            char_names.put("pacman", "Pacman");
+            char_names.put("reflet", "Robin");
+            char_names.put("shulk", "Shulk");
+            char_names.put("koopajr", "Bowser Jr");
+            char_names.put("duckhunt", "Duck Hunt Duo");
+            char_names.put("ryu", "Ryu");
+            char_names.put("ken", "Ken");
+            char_names.put("cloud", "Cloud");
+            char_names.put("kamui", "Corrin");
+            char_names.put("bayonetta", "Bayonetta");
+            char_names.put("inkling", "Inkling");
+            char_names.put("ridley", "Ridley");
+            char_names.put("simon", "Simon");
+            char_names.put("richter", "Richter");
+            char_names.put("krool", "King K. Rool");
+            char_names.put("shizue", "Isabelle");
+            char_names.put("gaogaen", "Incineroar");
+            char_names.put("packun", "Pirahna Plant");
+            char_names.put("jack", "Joker");
+            char_names.put("brave", "Hero");
+            char_names.put("buddy", "Banjo & Kazooie");
+            char_names.put("dolly", "Terry");
+            char_names.put("master", "Byleth");
+            char_names.put("tantan", "Min Min");
+            char_names.put("pickel", "Steve");
+            char_names.put("edge", "Sephiroth");
+            char_names.put("eflame", "Pyra");
+            char_names.put("element", "Rex");
+            char_names.put("elight", "Mythra");
+            char_names.put("demon", "Kazuya");
+            char_names.put("trail", "Sora");
         }
     }
 }

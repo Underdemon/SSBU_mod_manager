@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="mod_parsing">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/dist/mod_parsing.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
