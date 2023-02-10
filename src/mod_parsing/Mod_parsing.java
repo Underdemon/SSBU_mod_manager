@@ -67,9 +67,14 @@ public class Mod_parsing
 
         System.out.println("\n\n\n\n\n\n\n");
 
-        for(String s : pf.modsNChars)
+        for(ModInfo<String> mod : pf.getMods())
         {
-            System.out.println(s);
+            System.out.println
+            (
+                    mod.getModName() + "\n"
+                    + mod.getCharName() + ": " + mod.getSlotName()
+                    + "\n\n"
+            );
         }
     }
 
@@ -81,7 +86,8 @@ public class Mod_parsing
         final Pattern ui = Pattern.compile("chara_[0-7]");
         HashMap<String, String> char_names = new HashMap<>();
         boolean isModFound = false;
-        HashSet<String> modsNChars = new HashSet<>();
+        HashSet<ModInfo<String>> mods = new HashSet<>();
+        
         // Print information about
         // each type of file.
 
@@ -113,7 +119,11 @@ public class Mod_parsing
                                 char_names.get(charFolder.getFileName().toString())
                                 + "\n\tMod Name: " + charFolder.getParent().getParent().getParent().getFileName().toString()
                         );
-                        modsNChars.add(charFolder.getParent().getParent().getParent().getFileName().toString());
+                        Matcher m = slot.matcher(file.normalize().toString());
+                        if(m.find())
+                        {
+                            mods.add(new ModInfo<String>(charFolder.getParent().getParent().getParent().getFileName().toString(), char_names.get(charFolder.getFileName().toString()), m.group(0).toString()));
+                        }
                     }
                     else
                     {
@@ -122,7 +132,12 @@ public class Mod_parsing
                             char_names.get(charFolder.getFileName().toString())
                             + "\n\tMod Name: " + charFolder.getParent().getParent().getFileName().toString()
                         );
-                        modsNChars.add(charFolder.getParent().getParent().getFileName().toString());
+                        var a = file.normalize().toString();
+                        Matcher m = slot.matcher(file.normalize().toString());
+                        if(m.find())
+                        {
+                            mods.add(new ModInfo<String>(charFolder.getParent().getParent().getFileName().toString(), char_names.get(charFolder.getFileName().toString()), m.group(0).toString()));
+                        }
                     }
 
                     //isModFound = true;
@@ -165,9 +180,9 @@ public class Mod_parsing
             return CONTINUE;
         }
 
-        public HashSet<String> getModsNChars()
+        public HashSet<ModInfo<String>> getMods()
         {
-            return modsNChars;
+            return mods;
         }
 
         public PrintFiles()
