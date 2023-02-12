@@ -7,12 +7,9 @@ package mod_parsing;
 import java.io.IOException;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.HashMap;
-import java.util.Objects;
-import java.util.Scanner;
+import java.util.*;
 import java.util.regex.*;
 import static java.nio.file.FileVisitResult.*;
-import java.util.HashSet;
 
 /**
  *
@@ -27,57 +24,20 @@ public class Mod_parsing
      */
     public static void main(String[] args) throws IOException
     {
-        //Files.walk(dir).filter(Files::isDirectory).forEach(System.out::println);
-        // https://stackoverflow.com/questions/31020269/what-is-the-use-of-system-outprintln-in-java-8
-        //Files.walk(dir).filter(p -> p.getFileName().toString().matches("c0[0-9]")).forEach(System.out::println);
-        /*
-        Files.walk(dir).filter(p -> p.getFileName().toString().matches("fighter")).map(p ->
-        {
-            return p.getParent().equals("fighter")
-                    || p.getParent().equals("ui")
-                    || p.getParent().equals("stream;")
-                    || p.getParent().equals("stage")
-                    || p.getParent().equals("effect")
-                    || p.getParent().equals("boss")
-                    || p.getParent().equals("param")
-                    || p.getParent().equals("sound");
-        });
-        */
-        
-        //https://www.baeldung.com/regular-expressions-java
-        
-        /*
-        Pattern pttrn = Pattern.compile("(fighter)|(ui)|(stream;)|(stage)|(effect)|(boss)|(param)|(sound)");    //defines regex pattern to test (& compiles it?)
-        Files.walk(dir).forEach
-        (
-                file ->
-                {
-                    Matcher mtchr = pttrn.matcher(file.getFileName().toString());   //matches string to pattern defined above
-                    while(mtchr.find()) //check all occurences
-                    {
-                        if(!mtchr.group().equals(null))
-                            System.out.println("\n" + file.getParent().getFileName().toString() + "\n" + "|" + "\n|___" + mtchr.group());
-                    }
-                }
-        );
-        */
         Path dir = Paths.get("R:\\switch sutff\\smash ult modding\\mods");
         PrintFiles pf = new PrintFiles();
         Files.walkFileTree(dir, pf);
 
         System.out.println("\n\n\n\n\n\n\n");
+        pf.getMods().forEach((mod, charSlot) -> {
+            mod.outputModData();
+            System.out.println(charSlot);
+        });
 
-        for(ModInfo<String> mod : pf.getMods())
-        {
-            System.out.println
-            (
-                    mod.getModName() + "\n"
-                    + mod.getCharName() + ": " + mod.getSlotName()
-                    + "\n\n"
-            );
-        }
     }
 
+
+    // maybe refactor into hashmap with key: mod name && value: hashmap with key: character && value: hashset of slots
     public static class PrintFiles extends SimpleFileVisitor<Path>
     {
         final Pattern type = Pattern.compile("(fighter)|(ui)|(stream;)|(stage)|(effect)|(boss)|(param)|(sound)");    //defines regex pattern to test (& compiles it?)
@@ -86,7 +46,7 @@ public class Mod_parsing
         final Pattern ui = Pattern.compile("chara_[0-7]");
         HashMap<String, String> char_names = new HashMap<>();
         boolean isModFound = false;
-        HashSet<ModInfo<String>> mods = new HashSet<>();
+        Map<ModInfo<String>, HashSet<String>> fighter_mods = new HashMap<>();
         
         // Print information about
         // each type of file.
@@ -114,29 +74,36 @@ public class Mod_parsing
                         return CONTINUE;
                     else if (charFolder.getParent().getParent().getFileName().toString().equals("camera") || charFolder.getParent().getParent().getFileName().toString().equals("effect"))
                     {
-                        System.out.println
-                        (
-                                char_names.get(charFolder.getFileName().toString())
-                                + "\n\tMod Name: " + charFolder.getParent().getParent().getParent().getFileName().toString()
-                        );
                         Matcher m = slot.matcher(file.normalize().toString());
                         if(m.find())
                         {
-                            mods.add(new ModInfo<String>(charFolder.getParent().getParent().getParent().getFileName().toString(), char_names.get(charFolder.getFileName().toString()), m.group(0).toString()));
+                            ModInfo<String> info = new ModInfo<>(charFolder.getParent().getParent().getParent().getFileName().toString(), char_names.get(charFolder.getFileName().toString()));
+                            if(fighter_mods.containsKey(info))
+                            {
+                                fighter_mods.get(info).add(m.group(0));
+                            }
+                            else
+                            {
+                                fighter_mods.put(info, new HashSet<>());
+                                fighter_mods.get(info).add(m.group(0));
+                            }
                         }
                     }
                     else
                     {
-                        System.out.println
-                        (
-                            char_names.get(charFolder.getFileName().toString())
-                            + "\n\tMod Name: " + charFolder.getParent().getParent().getFileName().toString()
-                        );
-                        var a = file.normalize().toString();
                         Matcher m = slot.matcher(file.normalize().toString());
                         if(m.find())
                         {
-                            mods.add(new ModInfo<String>(charFolder.getParent().getParent().getFileName().toString(), char_names.get(charFolder.getFileName().toString()), m.group(0).toString()));
+                            ModInfo<String> info = new ModInfo<>(charFolder.getParent().getParent().getFileName().toString(), char_names.get(charFolder.getFileName().toString()));
+                            if(fighter_mods.containsKey(info))
+                            {
+                                fighter_mods.get(info).add(m.group(0));
+                            }
+                            else
+                            {
+                                fighter_mods.put(info, new HashSet<>());
+                                fighter_mods.get(info).add(m.group(0));
+                            }
                         }
                     }
 
@@ -149,15 +116,9 @@ public class Mod_parsing
         }
 
         @Override
-        public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException
+        public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs)
         {
-//            if(isModFound)
-//            {
-//                isModFound = false;
-//                return SKIP_SIBLINGS;
-//            }
-//            else
-                return CONTINUE;
+            return CONTINUE;
         }
 
         // Print each directory visited.
@@ -180,9 +141,9 @@ public class Mod_parsing
             return CONTINUE;
         }
 
-        public HashSet<ModInfo<String>> getMods()
+        public Map<ModInfo<String>, HashSet<String>> getMods()
         {
-            return mods;
+            return fighter_mods;
         }
 
         public PrintFiles()

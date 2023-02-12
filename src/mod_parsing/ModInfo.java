@@ -6,13 +6,11 @@ public class ModInfo<T>
 {
     private T modName;
     private T charName;
-    private T slotName;
 
-    public ModInfo(T modName, T charName, T slotName)
+    public ModInfo(T modName, T charName)
     {
         this.modName    = modName;
         this.charName   = charName;
-        this.slotName   = slotName;
     }
 
     public T getModName()
@@ -35,13 +33,23 @@ public class ModInfo<T>
         this.charName = charName;
     }
 
-    public T getSlotName()
+    public void outputModData()
     {
-        return slotName;
+        System.out.println("\n" + this.modName + "\n" + this.charName);
     }
 
-    public void setSlotName(T slotName)
+    @Override
+    public boolean equals(Object o)
     {
-        this.slotName = slotName;
+        if(((ModInfo<?>) o).getModName().equals(modName) && ((ModInfo<?>) o).getCharName().equals(charName))
+            return true;
+        else
+        return false;
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return getCharName().hashCode() + getModName().hashCode();
     }
 }
