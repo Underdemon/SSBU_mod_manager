@@ -1,55 +1,37 @@
 package mod_parsing;
-
-import java.util.ArrayList;
-
-public class ModInfo<T>
+public class ModInfo
 {
-    private T modName;
-    private T charName;
-
-    public ModInfo(T modName, T charName)
+    private String modName;
+    private String dir;
+    public ModInfo(String modName, String dir)
     {
         this.modName    = modName;
-        this.charName   = charName;
+        this.dir        = dir;
     }
 
-    public T getModName()
+    public String getModName()
     {
         return modName;
     }
 
-    public void setModName(T modName)
+    public void setModName(String modName)
     {
         this.modName = modName;
     }
 
-    public T getCharName()
+    public String getDir()
     {
-        return charName;
+        return dir;
     }
 
-    public void setCharName(T charName)
+    public void setDir(String dir)
     {
-        this.charName = charName;
-    }
-
-    public void outputModData()
-    {
-        System.out.println("\n" + this.modName + "\n" + this.charName);
-    }
-
-    @Override
-    public boolean equals(Object o)
-    {
-        if(((ModInfo<?>) o).getModName().equals(modName) && ((ModInfo<?>) o).getCharName().equals(charName))
-            return true;
-        else
-        return false;
+        this.dir = dir;
     }
 
     @Override
     public int hashCode()
     {
-        return getCharName().hashCode() + getModName().hashCode();
+        return modName.hashCode() + dir.hashCode();
     }
 }

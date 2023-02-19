@@ -24,7 +24,7 @@ public class Mod_parsing
      */
     public static void main(String[] args) throws IOException
     {
-        Path dir = Paths.get("R:\\switch sutff\\smash ult modding\\mods");
+        Path dir = Paths.get("R:\\switch sutff\\smash ult modding\\test_dir");
         PrintFiles pf = new PrintFiles();
         Files.walkFileTree(dir, pf);
 
@@ -36,8 +36,14 @@ public class Mod_parsing
 
     }
 
+    enum ModType
+    {
+        FIGHTER,
+        STAGE,
+        MENU,
+        OTHER
+    }
 
-    // maybe refactor into hashmap with key: mod name && value: hashmap with key: character && value: hashset of slots
     public static class PrintFiles extends SimpleFileVisitor<Path>
     {
         final Pattern type = Pattern.compile("(fighter)|(ui)|(stream;)|(stage)|(effect)|(boss)|(param)|(sound)");    //defines regex pattern to test (& compiles it?)
@@ -45,17 +51,143 @@ public class Mod_parsing
         final Pattern slot = Pattern.compile("c0[0-7]");
         final Pattern ui = Pattern.compile("chara_[0-7]");
         HashMap<String, String> char_names = new HashMap<>();
-        boolean isModFound = false;
-        Map<ModInfo<String>, HashSet<String>> fighter_mods = new HashMap<>();
-        
+
+
+        /*
+        hashmap
+            key - ModInfo   // will inc mod name and mod dir
+            value
+                hashset of ModType
+
+                ModType is a parent class that has subclasses of the types of mods
+                each type of mod has a diff implementation
+
+                stage mod   - hashset of stages the mod effects
+                            - inc whether it changes ui
+
+                fighter skin    - hashmap with char name and slots
+                                - inc whether it changes ui
+
+                fighter sound
+
+                item mod
+
+                music change
+
+                boss mod
+
+                UI MODS
+                ========
+                character select portrait
+                css layouts
+                loading icons
+                loading screens
+                opening movies
+                sss layouts
+                stage select portraits
+                title screen
+                fonts
+                stock icons
+                menu
+                series icon
+                online arena
+                result screen layout
+                stage select logos
+                css background
+                matchup screen
+                ========
+
+                final smash mod -> ./prebuilt;/movie/fighter/<fighter_name>/c0X/whatever
+
+                spirits mod -> ./ui/replace/spirits/spirits_X/spirits_X_spiritName.bntx OR ./ui/replace_patch/spirits/spirits_X/spirits_X_spiritName.bntx
+                    patch just means DLC
+                    look at file tree https://gamebanana.com/mods/download/427229#FileInfo_935025
+
+                classic mode -> ./ui/param/standard/standard_route_<char_name>.prc OR ./ui/param_patch/standard/standard_route_<char_name>.prc
+
+                skyline mod - atmosphere/contents/01006A800016E000/romfs/skyline/plugins/skylineModName.nro
+
+                if cant find exact mod type either a) misc mod  b) misc mod relating to (overarching mod type)
+
+                    modTypes:
+
+                        FIGHTER MODS:
+                        =============
+                        - effect ---> has subfolder fighter with subfolder <char_name>
+                        - fighter ---> has subfolder <char_name>
+                        - sound ---> has dir ./sound/bank/fighter_voice/vc_<char_name>_<char_slot>.nus3audio
+                        - stream ---> has dir ./stream;/sound/bgm/bgm_zz07_f_<char_name>.nus3audio or .nus3bank
+                        - ui ---> has dir ./ui/replace_patch/chara/chara_X/chara_X_<char_name>_<char_slot>.bntx
+                        - item --> has dir ./item/<item_name>/model/body/c00/(item files)
+
+                        STAGE MODS:
+                        ===========
+                        - effect ---> ./effect/stage/<stage_name>
+                        - stage ---> ./stage/<stage_name>
+                        - ui ---> ./ui/replace/stage/stage_X
+                        or
+                        - ui ---> ./ui/replace_patch/stage/stage_X
+
+                        - always has a /stage/ folder
+
+                        OTHER MODS:
+                        ===========
+                        - boss ---> mods a boss
+                        - sound ---> replaces a sound (eg spike vine boom)
+
+                        MENU LAYOUT MOD:
+                        ================
+                        ./ui/layout/menu
+         */
+
+        HashMap<String, HashSet<HashMap<ModType, HashMap<String, HashSet<String>>>>> mods = new HashMap<>();
         // Print information about
         // each type of file.
 
         @Override
         public FileVisitResult visitFile(Path file, BasicFileAttributes attr) throws NullPointerException
         {
+            Path modName;
+            ModType type;
             try
             {
+//                if(file.getFileName().toString().equals("stage"))
+//                {
+//                    type = ModType.STAGE;
+//
+//                    if(file.getParent().getFileName().toString().equals("effect"))
+//                    {
+//                        modName = file.getParent().getParent();
+//                    }
+//                    else if(file.getParent().getParent().equals("ui"))
+//                    {
+//                        modName = file.getParent().getParent().getParent();
+//                    }
+//                    else    // else the "stage" folder is right below the mod name
+//                    {
+//                        modName = file.getParent();
+//                    }
+//
+//                    if(mods.containsKey(modName))   // there is at least 1 mod type already searched for in that mod
+//                    {
+//
+//                    }
+//                    else
+//                    {
+//
+//                    }
+//                }
+
+                if(char_names.containsKey(file.getFileName().toString()))     // if the folder name is the name of a fighter
+                {
+                    if(file.getParent().getFileName().equals("fighter"))
+                    {
+
+                    }
+
+                }
+
+                /*
                 if (file.normalize().toString().matches(".*(\\\\c0[0-7]\\\\).*"))
                 {
                     Path charFolder = Paths.get(file.toString());
@@ -78,14 +210,14 @@ public class Mod_parsing
                         if(m.find())
                         {
                             ModInfo<String> info = new ModInfo<>(charFolder.getParent().getParent().getParent().getFileName().toString(), char_names.get(charFolder.getFileName().toString()));
-                            if(fighter_mods.containsKey(info))
+                            if(mods.containsKey(info))
                             {
-                                fighter_mods.get(info).add(m.group(0));
+                                mods.get(info).add(m.group(0));
                             }
                             else
                             {
-                                fighter_mods.put(info, new HashSet<>());
-                                fighter_mods.get(info).add(m.group(0));
+                                mods.put(info, new HashSet<>());
+                                mods.get(info).add(m.group(0));
                             }
                         }
                     }
@@ -95,21 +227,21 @@ public class Mod_parsing
                         if(m.find())
                         {
                             ModInfo<String> info = new ModInfo<>(charFolder.getParent().getParent().getFileName().toString(), char_names.get(charFolder.getFileName().toString()));
-                            if(fighter_mods.containsKey(info))
+                            if(mods.containsKey(info))
                             {
-                                fighter_mods.get(info).add(m.group(0));
+                                mods.get(info).add(m.group(0));
                             }
                             else
                             {
-                                fighter_mods.put(info, new HashSet<>());
-                                fighter_mods.get(info).add(m.group(0));
+                                mods.put(info, new HashSet<>());
+                                mods.get(info).add(m.group(0));
                             }
                         }
                     }
 
                     //isModFound = true;
                     return SKIP_SIBLINGS;
-                }
+                }*/
             }
             catch(Exception e) {}
             return CONTINUE;
@@ -141,9 +273,9 @@ public class Mod_parsing
             return CONTINUE;
         }
 
-        public Map<ModInfo<String>, HashSet<String>> getMods()
+        public HashMap<String, HashSet<HashMap<ModType, HashMap<String, HashSet<String>>>>> getMods()
         {
-            return fighter_mods;
+            return mods;
         }
 
         public PrintFiles()
